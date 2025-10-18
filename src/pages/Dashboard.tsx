@@ -7,6 +7,8 @@ import { Baby, Plus, LogOut, User } from "lucide-react";
 import ChildCard from "@/components/ChildCard";
 import AddChildDialog from "@/components/AddChildDialog";
 import VaccinationSchedule from "@/components/VaccinationSchedule";
+import HealthAssistant from "@/components/HealthAssistant";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Child {
   id: string;
@@ -166,9 +168,22 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Vaccination Schedule */}
+        {/* Child Details Tabs */}
         {selectedChild && (
-          <VaccinationSchedule child={selectedChild} />
+          <Tabs defaultValue="vaccinations" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="vaccinations">Vaccination Schedule</TabsTrigger>
+              <TabsTrigger value="health">Health Assistant</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="vaccinations">
+              <VaccinationSchedule child={selectedChild} />
+            </TabsContent>
+
+            <TabsContent value="health">
+              <HealthAssistant child={selectedChild} />
+            </TabsContent>
+          </Tabs>
         )}
       </div>
 
