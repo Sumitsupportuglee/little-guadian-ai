@@ -182,10 +182,20 @@ const Index = () => {
             <p className="text-sm text-muted-foreground text-center">
               © 2025 VacciTrack. Ensuring healthy futures for India's children.
             </p>
-            <div className="flex gap-4 text-sm text-muted-foreground">
-              <button className="hover:text-primary">Privacy</button>
-              <button className="hover:text-primary">Terms</button>
-              <button className="hover:text-primary">Support</button>
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              <div className="flex gap-4">
+                <button className="hover:text-primary">Privacy</button>
+                <button className="hover:text-primary">Terms</button>
+              </div>
+              <div className="text-center md:text-right">
+                <div className="font-semibold text-foreground mb-1">Support</div>
+                <div className="hover:text-primary">
+                  <a href="mailto:ssingh2100.2100@gmail.com">ssingh2100.2100@gmail.com</a>
+                </div>
+                <div className="hover:text-primary">
+                  <a href="tel:+919439044619">+91-9439044619</a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
