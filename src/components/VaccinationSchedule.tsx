@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Circle, Calendar, Syringe, AlertCircle } from "lucide-react";
+import { CheckCircle2, Circle, Calendar, Syringe, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 
 interface Child {
@@ -37,6 +38,7 @@ interface VaccinationScheduleProps {
 const VaccinationSchedule = ({ child }: VaccinationScheduleProps) => {
   const [records, setRecords] = useState<VaccinationRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -141,6 +143,15 @@ const VaccinationSchedule = ({ child }: VaccinationScheduleProps) => {
     return groups;
   };
 
+  const toggleAllGroups = (expand: boolean) => {
+    const groups = Object.keys(groupByAge());
+    const newState: Record<string, boolean> = {};
+    groups.forEach(group => {
+      newState[group] = expand;
+    });
+    setExpandedGroups(newState);
+  };
+
   const completedCount = records.filter((r) => r.is_completed).length;
   const totalCount = records.length;
   const dueCount = records.filter((r) => isDue(r)).length;
@@ -159,13 +170,25 @@ const VaccinationSchedule = ({ child }: VaccinationScheduleProps) => {
     <div className="space-y-6">
       <Card className="bg-gradient-to-br from-primary/5 to-secondary/5">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Syringe className="h-6 w-6 text-primary" />
-            Vaccination Schedule for {child.name}
-          </CardTitle>
-          <CardDescription>
-            Track all mandatory vaccines as per India's 2025 guidelines
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Syringe className="h-6 w-6 text-primary" />
+                Vaccination Schedule for {child.name}
+              </CardTitle>
+              <CardDescription className="mt-2">
+                Track all mandatory vaccines as per India's 2025 guidelines
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => toggleAllGroups(true)}>
+                Expand All
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => toggleAllGroups(false)}>
+                Collapse All
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-4">
@@ -202,13 +225,37 @@ const VaccinationSchedule = ({ child }: VaccinationScheduleProps) => {
         </TabsList>
 
         <TabsContent value="all" className="space-y-6 mt-6">
-          {Object.entries(groupedRecords).map(([age, ageRecords]) => (
-            <Card key={age}>
-              <CardHeader>
-                <CardTitle className="text-lg">{age}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {ageRecords.map((record) => (
+          {Object.entries(groupedRecords).map(([age, ageRecords]) => {
+            const isExpanded = expandedGroups[age] ?? true;
+            const completedInGroup = ageRecords.filter(r => r.is_completed).length;
+            
+            return (
+              <Card key={age}>
+                <Collapsible 
+                  open={isExpanded} 
+                  onOpenChange={(open) => setExpandedGroups(prev => ({ ...prev, [age]: open }))}
+                >
+                  <CollapsibleTrigger className="w-full">
+                    <CardHeader className="hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="text-left">
+                          <CardTitle className="text-lg">{age}</CardTitle>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {completedInGroup} of {ageRecords.length} completed
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {completedInGroup === ageRecords.length && (
+                            <CheckCircle2 className="h-5 w-5 text-success" />
+                          )}
+                          {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                        </div>
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="space-y-3 pt-0">
+                      {ageRecords.map((record) => (
                   <div
                     key={record.id}
                     className={cn(
@@ -258,11 +305,14 @@ const VaccinationSchedule = ({ child }: VaccinationScheduleProps) => {
                         </p>
                       )}
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))}
+                      </div>
+                      ))}
+                    </CardContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
+            );
+          })}
         </TabsContent>
 
         <TabsContent value="due" className="space-y-3 mt-6">
