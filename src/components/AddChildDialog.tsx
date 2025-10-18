@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,6 +34,7 @@ const AddChildDialog = ({ open, onOpenChange, onChildAdded }: AddChildDialogProp
     gender: "",
     place_of_birth: "",
     birth_health_issues: [] as string[],
+    custom_health_issues: "",
   });
   const { toast } = useToast();
 
@@ -44,13 +46,19 @@ const AddChildDialog = ({ open, onOpenChange, onChildAdded }: AddChildDialogProp
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Combine selected checkboxes and custom text
+      const allHealthIssues = [...formData.birth_health_issues];
+      if (formData.custom_health_issues.trim()) {
+        allHealthIssues.push(formData.custom_health_issues.trim());
+      }
+
       const { error } = await supabase.from("children").insert({
         parent_id: user.id,
         name: formData.name,
         date_of_birth: formData.date_of_birth,
         gender: formData.gender,
         place_of_birth: formData.place_of_birth || null,
-        birth_health_issues: formData.birth_health_issues.length > 0 ? formData.birth_health_issues : null,
+        birth_health_issues: allHealthIssues.length > 0 ? allHealthIssues : null,
       });
 
       if (error) throw error;
@@ -66,6 +74,7 @@ const AddChildDialog = ({ open, onOpenChange, onChildAdded }: AddChildDialogProp
         gender: "",
         place_of_birth: "",
         birth_health_issues: [],
+        custom_health_issues: "",
       });
 
       onChildAdded();
@@ -171,6 +180,17 @@ const AddChildDialog = ({ open, onOpenChange, onChildAdded }: AddChildDialogProp
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="custom-issues">Additional Health Issues (if any)</Label>
+            <Textarea
+              id="custom-issues"
+              value={formData.custom_health_issues}
+              onChange={(e) => setFormData({ ...formData, custom_health_issues: e.target.value })}
+              placeholder="Enter any other health issues or complications not listed above"
+              rows={3}
+            />
           </div>
 
           <div className="flex gap-3 pt-4">
