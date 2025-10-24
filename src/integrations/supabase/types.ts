@@ -58,6 +58,62 @@ export type Database = {
           },
         ]
       }
+      medications: {
+        Row: {
+          child_id: string
+          created_at: string
+          doctor_contact: string | null
+          doctor_name: string
+          dosage: string
+          duration: string
+          frequency: string
+          health_issue: string
+          id: string
+          medicine_name: string
+          notes: string | null
+          prescribed_date: string
+          updated_at: string
+        }
+        Insert: {
+          child_id: string
+          created_at?: string
+          doctor_contact?: string | null
+          doctor_name: string
+          dosage: string
+          duration: string
+          frequency: string
+          health_issue: string
+          id?: string
+          medicine_name: string
+          notes?: string | null
+          prescribed_date: string
+          updated_at?: string
+        }
+        Update: {
+          child_id?: string
+          created_at?: string
+          doctor_contact?: string | null
+          doctor_name?: string
+          dosage?: string
+          duration?: string
+          frequency?: string
+          health_issue?: string
+          id?: string
+          medicine_name?: string
+          notes?: string | null
+          prescribed_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_child"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
