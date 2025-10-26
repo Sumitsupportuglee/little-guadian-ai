@@ -8,6 +8,7 @@ import ChildCard from "@/components/ChildCard";
 import AddChildDialog from "@/components/AddChildDialog";
 import VaccinationSchedule from "@/components/VaccinationSchedule";
 import HealthAssistant from "@/components/HealthAssistant";
+import FindDoctors from "@/components/FindDoctors";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Child {
@@ -199,10 +200,7 @@ const Dashboard = () => {
             </TabsContent>
 
             <TabsContent value="doctors">
-              <div className="bg-card rounded-lg border p-6">
-                <h3 className="text-xl font-semibold mb-4">Find Doctors Near You</h3>
-                <p className="text-muted-foreground">Doctor search and booking features coming soon...</p>
-              </div>
+              <FindDoctors children={children} />
             </TabsContent>
           </Tabs>
         )}

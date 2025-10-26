@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Heart, LogOut, User, Calendar, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import DoctorAvailability from "@/components/DoctorAvailability";
 
 interface Doctor {
   id: string;
@@ -232,14 +233,7 @@ const DoctorDashboard = () => {
           </TabsContent>
 
           <TabsContent value="availability">
-            <Card>
-              <CardHeader>
-                <CardTitle>Manage Availability</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Availability management coming soon...</p>
-              </CardContent>
-            </Card>
+            {doctorProfile && <DoctorAvailability doctorId={doctorProfile.id} />}
           </TabsContent>
         </Tabs>
       </div>
