@@ -16,23 +16,50 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
+  const [role, setRole] = useState<"parent" | "doctor">("parent");
+  const [specialization, setSpecialization] = useState("");
+  const [qualification, setQualification] = useState("");
+  const [experienceYears, setExperienceYears] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Check if user is already logged in and redirect based on role
+    const checkAuthAndRedirect = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/dashboard");
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (roleData?.role === "doctor") {
+          navigate("/doctor-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       }
-    });
+    };
+
+    checkAuthAndRedirect();
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
-        navigate("/dashboard");
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .single();
+
+        if (roleData?.role === "doctor") {
+          navigate("/doctor-dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       }
     });
 
@@ -83,9 +110,32 @@ const Auth = () => {
 
           if (profileError) throw profileError;
 
+          // Create user role
+          const { error: roleError } = await supabase.from("user_roles").insert({
+            user_id: data.user.id,
+            role: role,
+          });
+
+          if (roleError) throw roleError;
+
+          // If doctor, create doctor profile
+          if (role === "doctor") {
+            const { error: doctorError } = await supabase.from("doctors").insert({
+              user_id: data.user.id,
+              specialization,
+              qualification,
+              experience_years: parseInt(experienceYears),
+              location,
+            });
+
+            if (doctorError) throw doctorError;
+          }
+
           toast({
             title: "Account created!",
-            description: "Welcome to VacciTrack. Let's add your child's profile.",
+            description: role === "doctor" 
+              ? "Welcome to VacciTrack. Your doctor profile is ready."
+              : "Welcome to VacciTrack. Let's add your child's profile.",
           });
         }
       }
@@ -163,6 +213,42 @@ const Auth = () => {
               {!isLogin && (
                 <>
                   <div className="space-y-2">
+                    <Label>I am a</Label>
+                    <div className="flex gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setRole("parent")}
+                        className={`flex-1 p-4 border-2 rounded-lg transition-all ${
+                          role === "parent"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="text-center">
+                          <Baby className="h-8 w-8 mx-auto mb-2 text-primary" />
+                          <p className="font-semibold">Parent</p>
+                          <p className="text-xs text-muted-foreground">Manage child's health</p>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRole("doctor")}
+                        className={`flex-1 p-4 border-2 rounded-lg transition-all ${
+                          role === "doctor"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="text-center">
+                          <Heart className="h-8 w-8 mx-auto mb-2 text-primary" />
+                          <p className="font-semibold">Doctor</p>
+                          <p className="text-xs text-muted-foreground">Manage patients</p>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="name">Full Name</Label>
                     <Input
                       id="name"
@@ -173,6 +259,46 @@ const Auth = () => {
                       required={!isLogin}
                     />
                   </div>
+
+                  {role === "doctor" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="specialization">Specialization</Label>
+                        <Input
+                          id="specialization"
+                          type="text"
+                          placeholder="e.g., Pediatrician"
+                          value={specialization}
+                          onChange={(e) => setSpecialization(e.target.value)}
+                          required={!isLogin}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="qualification">Qualification</Label>
+                        <Input
+                          id="qualification"
+                          type="text"
+                          placeholder="e.g., MBBS, MD"
+                          value={qualification}
+                          onChange={(e) => setQualification(e.target.value)}
+                          required={!isLogin}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="experience">Experience (Years)</Label>
+                        <Input
+                          id="experience"
+                          type="number"
+                          placeholder="Years of experience"
+                          value={experienceYears}
+                          onChange={(e) => setExperienceYears(e.target.value)}
+                          required={!isLogin}
+                          min="0"
+                        />
+                      </div>
+                    </>
+                  )}
+
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
                     <Input
@@ -191,6 +317,7 @@ const Auth = () => {
                       placeholder="City, State"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
+                      required={!isLogin}
                     />
                   </div>
                 </>

@@ -38,6 +38,19 @@ const Dashboard = () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/auth");
+      return;
+    }
+
+    // Check if user has parent role
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", session.user.id)
+      .single();
+
+    if (roleData?.role === "doctor") {
+      navigate("/doctor-dashboard");
+      return;
     }
   };
 
@@ -171,9 +184,10 @@ const Dashboard = () => {
         {/* Child Details Tabs */}
         {selectedChild && (
           <Tabs defaultValue="vaccinations" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="vaccinations">Vaccination Schedule</TabsTrigger>
               <TabsTrigger value="health">Health Assistant</TabsTrigger>
+              <TabsTrigger value="doctors">Find Doctors</TabsTrigger>
             </TabsList>
 
             <TabsContent value="vaccinations">
@@ -182,6 +196,13 @@ const Dashboard = () => {
 
             <TabsContent value="health">
               <HealthAssistant child={selectedChild} />
+            </TabsContent>
+
+            <TabsContent value="doctors">
+              <div className="bg-card rounded-lg border p-6">
+                <h3 className="text-xl font-semibold mb-4">Find Doctors Near You</h3>
+                <p className="text-muted-foreground">Doctor search and booking features coming soon...</p>
+              </div>
             </TabsContent>
           </Tabs>
         )}
