@@ -14,6 +14,70 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          availability_id: string
+          child_id: string
+          created_at: string
+          doctor_id: string
+          id: string
+          notes: string | null
+          parent_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          availability_id: string
+          child_id: string
+          created_at?: string
+          doctor_id: string
+          id?: string
+          notes?: string | null
+          parent_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          availability_id?: string
+          child_id?: string
+          created_at?: string
+          doctor_id?: string
+          id?: string
+          notes?: string | null
+          parent_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_availability_id_fkey"
+            columns: ["availability_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_availability"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       children: {
         Row: {
           birth_health_issues: string[] | null
@@ -57,6 +121,122 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      doctor_availability: {
+        Row: {
+          available_date: string
+          created_at: string
+          doctor_id: string
+          end_time: string
+          id: string
+          is_booked: boolean
+          start_time: string
+        }
+        Insert: {
+          available_date: string
+          created_at?: string
+          doctor_id: string
+          end_time: string
+          id?: string
+          is_booked?: boolean
+          start_time: string
+        }
+        Update: {
+          available_date?: string
+          created_at?: string
+          doctor_id?: string
+          end_time?: string
+          id?: string
+          is_booked?: boolean
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_availability_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctor_patients: {
+        Row: {
+          allocated_date: string
+          child_id: string
+          created_at: string
+          doctor_id: string
+          id: string
+        }
+        Insert: {
+          allocated_date?: string
+          child_id: string
+          created_at?: string
+          doctor_id: string
+          id?: string
+        }
+        Update: {
+          allocated_date?: string
+          child_id?: string
+          created_at?: string
+          doctor_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctor_patients_child_id_fkey"
+            columns: ["child_id"]
+            isOneToOne: false
+            referencedRelation: "children"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "doctor_patients_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doctors: {
+        Row: {
+          bio: string | null
+          consultation_fee: number | null
+          created_at: string
+          experience_years: number
+          id: string
+          location: string
+          qualification: string
+          specialization: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          consultation_fee?: number | null
+          created_at?: string
+          experience_years: number
+          id?: string
+          location: string
+          qualification: string
+          specialization: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          consultation_fee?: number | null
+          created_at?: string
+          experience_years?: number
+          id?: string
+          location?: string
+          qualification?: string
+          specialization?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       medications: {
         Row: {
@@ -141,6 +321,27 @@ export type Database = {
           name?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -236,10 +437,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "doctor" | "parent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -366,6 +573,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["doctor", "parent"],
+    },
   },
 } as const
