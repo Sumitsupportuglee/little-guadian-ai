@@ -19,10 +19,11 @@ export type Database = {
           appointment_date: string
           appointment_time: string
           availability_id: string
-          child_id: string
+          child_id: string | null
           created_at: string
           doctor_id: string
           id: string
+          is_self_booking: boolean | null
           notes: string | null
           parent_id: string
           status: string
@@ -32,10 +33,11 @@ export type Database = {
           appointment_date: string
           appointment_time: string
           availability_id: string
-          child_id: string
+          child_id?: string | null
           created_at?: string
           doctor_id: string
           id?: string
+          is_self_booking?: boolean | null
           notes?: string | null
           parent_id: string
           status?: string
@@ -45,10 +47,11 @@ export type Database = {
           appointment_date?: string
           appointment_time?: string
           availability_id?: string
-          child_id?: string
+          child_id?: string | null
           created_at?: string
           doctor_id?: string
           id?: string
+          is_self_booking?: boolean | null
           notes?: string | null
           parent_id?: string
           status?: string

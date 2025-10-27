@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Baby, Shield, Calendar, Heart } from "lucide-react";
+import { Baby, Shield, Calendar, Heart, User, Stethoscope } from "lucide-react";
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,7 +17,7 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
-  const [role, setRole] = useState<"parent" | "doctor">("parent");
+  const [role, setRole] = useState<"parent" | "doctor" | "user">("user");
   const [specialization, setSpecialization] = useState("");
   const [qualification, setQualification] = useState("");
   const [experienceYears, setExperienceYears] = useState("");
@@ -135,7 +136,9 @@ const Auth = () => {
             title: "Account created!",
             description: role === "doctor" 
               ? "Welcome to VacciTrack. Your doctor profile is ready."
-              : "Welcome to VacciTrack. Let's add your child's profile.",
+              : role === "parent"
+              ? "Welcome to VacciTrack. Let's add your child's profile."
+              : "Welcome to VacciTrack. Book your first appointment.",
           });
         }
       }
@@ -214,11 +217,26 @@ const Auth = () => {
                 <>
                   <div className="space-y-2">
                     <Label>I am a</Label>
-                    <div className="flex gap-4">
+                    <div className="grid grid-cols-3 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setRole("user")}
+                        className={`p-4 border-2 rounded-lg transition-all ${
+                          role === "user"
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="text-center">
+                          <User className="h-8 w-8 mx-auto mb-2 text-primary" />
+                          <p className="font-semibold text-sm">User</p>
+                          <p className="text-xs text-muted-foreground">General Treatment</p>
+                        </div>
+                      </button>
                       <button
                         type="button"
                         onClick={() => setRole("parent")}
-                        className={`flex-1 p-4 border-2 rounded-lg transition-all ${
+                        className={`p-4 border-2 rounded-lg transition-all ${
                           role === "parent"
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/50"
@@ -226,23 +244,23 @@ const Auth = () => {
                       >
                         <div className="text-center">
                           <Baby className="h-8 w-8 mx-auto mb-2 text-primary" />
-                          <p className="font-semibold">Parent</p>
-                          <p className="text-xs text-muted-foreground">Manage child's health</p>
+                          <p className="font-semibold text-sm">Parent</p>
+                          <p className="text-xs text-muted-foreground">Child Healthcare</p>
                         </div>
                       </button>
                       <button
                         type="button"
                         onClick={() => setRole("doctor")}
-                        className={`flex-1 p-4 border-2 rounded-lg transition-all ${
+                        className={`p-4 border-2 rounded-lg transition-all ${
                           role === "doctor"
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/50"
                         }`}
                       >
                         <div className="text-center">
-                          <Heart className="h-8 w-8 mx-auto mb-2 text-primary" />
-                          <p className="font-semibold">Doctor</p>
-                          <p className="text-xs text-muted-foreground">Manage patients</p>
+                          <Stethoscope className="h-8 w-8 mx-auto mb-2 text-primary" />
+                          <p className="font-semibold text-sm">Doctor</p>
+                          <p className="text-xs text-muted-foreground">Medical Professional</p>
                         </div>
                       </button>
                     </div>
@@ -264,14 +282,18 @@ const Auth = () => {
                     <>
                       <div className="space-y-2">
                         <Label htmlFor="specialization">Specialization</Label>
-                        <Input
-                          id="specialization"
-                          type="text"
-                          placeholder="e.g., Pediatrician"
-                          value={specialization}
-                          onChange={(e) => setSpecialization(e.target.value)}
-                          required={!isLogin}
-                        />
+                        <Select value={specialization} onValueChange={setSpecialization} required>
+                          <SelectTrigger id="specialization">
+                            <SelectValue placeholder="Select specialization" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pediatrician">Pediatrician (Child Specialist)</SelectItem>
+                            <SelectItem value="General Medicine">General Medicine</SelectItem>
+                            <SelectItem value="Gynecologist">Gynecologist</SelectItem>
+                            <SelectItem value="Psychologist">Psychologist</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="qualification">Qualification</Label>

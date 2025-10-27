@@ -56,9 +56,11 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
   const [locationFilter, setLocationFilter] = useState("");
+  const [specializationFilter, setSpecializationFilter] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [selectedChild, setSelectedChild] = useState("");
+  const [bookingForSelf, setBookingForSelf] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -68,16 +70,22 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
   }, []);
 
   useEffect(() => {
-    if (locationFilter.trim() === "") {
-      setFilteredDoctors(doctors);
-    } else {
-      setFilteredDoctors(
-        doctors.filter((doc) =>
-          doc.location.toLowerCase().includes(locationFilter.toLowerCase())
-        )
+    let filtered = doctors;
+    
+    if (locationFilter.trim() !== "") {
+      filtered = filtered.filter((doc) =>
+        doc.location.toLowerCase().includes(locationFilter.toLowerCase())
       );
     }
-  }, [locationFilter, doctors]);
+    
+    if (specializationFilter !== "") {
+      filtered = filtered.filter((doc) =>
+        doc.specialization === specializationFilter
+      );
+    }
+    
+    setFilteredDoctors(filtered);
+  }, [locationFilter, specializationFilter, doctors]);
 
   const fetchDoctors = async () => {
     const { data: doctorsData, error } = await supabase
@@ -142,14 +150,17 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
     setSelectedDoctor(doctor);
     fetchDoctorAvailability(doctor.id);
     setSelectedChild("");
+    setBookingForSelf(false);
     setSelectedSlot("");
   };
 
   const handleBookAppointment = async () => {
-    if (!selectedChild || !selectedSlot || !selectedDoctor) {
+    if ((!bookingForSelf && !selectedChild) || !selectedSlot || !selectedDoctor) {
       toast({
         title: "Missing Information",
-        description: "Please select a child and an appointment slot.",
+        description: bookingForSelf 
+          ? "Please select an appointment slot." 
+          : "Please select a child and an appointment slot.",
         variant: "destructive",
       });
       return;
@@ -168,11 +179,12 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
       .insert({
         doctor_id: selectedDoctor.id,
         parent_id: user.id,
-        child_id: selectedChild,
+        child_id: bookingForSelf ? null : selectedChild,
         availability_id: slot.id,
         appointment_date: slot.available_date,
         appointment_time: slot.start_time,
         status: "pending",
+        is_self_booking: bookingForSelf,
       });
 
     if (appointmentError) {
@@ -203,6 +215,7 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
       });
       setSelectedDoctor(null);
       setSelectedChild("");
+      setBookingForSelf(false);
       setSelectedSlot("");
     }
 
@@ -213,17 +226,38 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Find Doctors</CardTitle>
+          <CardTitle>Find Doctors & Specialists</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <Label htmlFor="location">Filter by Location</Label>
-            <Input
-              id="location"
-              placeholder="Enter city or state..."
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-            />
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="specialization">Specialization</Label>
+              <Select
+                value={specializationFilter}
+                onValueChange={setSpecializationFilter}
+              >
+                <SelectTrigger id="specialization">
+                  <SelectValue placeholder="All specializations" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Specializations</SelectItem>
+                  <SelectItem value="Pediatrician">Pediatrician</SelectItem>
+                  <SelectItem value="General Medicine">General Medicine</SelectItem>
+                  <SelectItem value="Gynecologist">Gynecologist</SelectItem>
+                  <SelectItem value="Psychologist">Psychologist</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                placeholder="Enter city or state..."
+                value={locationFilter}
+                onChange={(e) => setLocationFilter(e.target.value)}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -271,30 +305,56 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
                     </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 mt-4">
-                    {children.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        Please add a child profile first to book appointments
-                      </div>
-                    ) : (
-                      <>
-                        <div className="space-y-2">
-                          <Label>Select Child</Label>
-                          <Select
-                            value={selectedChild}
-                            onValueChange={setSelectedChild}
+                    <div className="space-y-2">
+                      <Label>Booking For</Label>
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => setBookingForSelf(true)}
+                          className={`flex-1 p-3 border rounded-lg text-left transition-all ${
+                            bookingForSelf
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <p className="font-medium">Myself</p>
+                          <p className="text-sm text-muted-foreground">Book for self</p>
+                        </button>
+                        {children.length > 0 && (
+                          <button
+                            onClick={() => setBookingForSelf(false)}
+                            className={`flex-1 p-3 border rounded-lg text-left transition-all ${
+                              !bookingForSelf
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/50"
+                            }`}
                           >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Choose a child" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {children.map((child) => (
-                                <SelectItem key={child.id} value={child.id}>
-                                  {child.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                            <p className="font-medium">My Child</p>
+                            <p className="text-sm text-muted-foreground">Book for child</p>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {!bookingForSelf && children.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Select Child</Label>
+                        <Select
+                          value={selectedChild}
+                          onValueChange={setSelectedChild}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose a child" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {children.map((child) => (
+                              <SelectItem key={child.id} value={child.id}>
+                                {child.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
 
                         <div className="space-y-2">
                           <Label>Available Slots</Label>
@@ -336,16 +396,14 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
                           )}
                         </div>
 
-                        {availabilities.length > 0 && (
-                          <Button
-                            onClick={handleBookAppointment}
-                            disabled={loading || !selectedChild || !selectedSlot}
-                            className="w-full"
-                          >
-                            Confirm Booking
-                          </Button>
-                        )}
-                      </>
+                    {availabilities.length > 0 && (
+                      <Button
+                        onClick={handleBookAppointment}
+                        disabled={loading || (!bookingForSelf && !selectedChild) || !selectedSlot}
+                        className="w-full"
+                      >
+                        Confirm Booking
+                      </Button>
                     )}
                   </div>
                 </DialogContent>
