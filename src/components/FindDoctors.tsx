@@ -74,13 +74,13 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
     
     if (locationFilter.trim() !== "") {
       filtered = filtered.filter((doc) =>
-        doc.location.toLowerCase().includes(locationFilter.toLowerCase())
+        doc.location.toLowerCase().trim().includes(locationFilter.toLowerCase().trim())
       );
     }
     
-    if (specializationFilter !== "") {
+    if (specializationFilter && specializationFilter.trim() !== "") {
       filtered = filtered.filter((doc) =>
-        doc.specialization === specializationFilter
+        doc.specialization.trim() === specializationFilter.trim()
       );
     }
     
@@ -232,21 +232,32 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="specialization">Specialization</Label>
-              <Select
-                value={specializationFilter || undefined}
-                onValueChange={(value) => setSpecializationFilter(value)}
-              >
-                <SelectTrigger id="specialization">
-                  <SelectValue placeholder="All specializations" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pediatrician">Pediatrician</SelectItem>
-                  <SelectItem value="General Medicine">General Medicine</SelectItem>
-                  <SelectItem value="Gynecologist">Gynecologist</SelectItem>
-                  <SelectItem value="Psychologist">Psychologist</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select
+                  value={specializationFilter || undefined}
+                  onValueChange={(value) => setSpecializationFilter(value)}
+                >
+                  <SelectTrigger id="specialization">
+                    <SelectValue placeholder="All specializations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Pediatrician">Pediatrician</SelectItem>
+                    <SelectItem value="General Medicine">General Medicine</SelectItem>
+                    <SelectItem value="Gynecologist">Gynecologist</SelectItem>
+                    <SelectItem value="Psychologist">Psychologist</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                {specializationFilter && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setSpecializationFilter("")}
+                  >
+                    ×
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
