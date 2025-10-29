@@ -111,11 +111,11 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
           .from("profiles")
           .select("name")
           .eq("id", doctor.user_id)
-          .single();
+          .maybeSingle();
 
         return {
           ...doctor,
-          profiles: { name: profile?.name || "Unknown" }
+          profiles: { name: profile?.name || "Doctor" }
         };
       })
     );
