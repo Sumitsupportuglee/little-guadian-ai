@@ -233,14 +233,13 @@ const FindDoctors = ({ children }: FindDoctorsProps) => {
             <div className="space-y-2">
               <Label htmlFor="specialization">Specialization</Label>
               <Select
-                value={specializationFilter}
-                onValueChange={setSpecializationFilter}
+                value={specializationFilter || undefined}
+                onValueChange={(value) => setSpecializationFilter(value)}
               >
                 <SelectTrigger id="specialization">
                   <SelectValue placeholder="All specializations" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Specializations</SelectItem>
                   <SelectItem value="Pediatrician">Pediatrician</SelectItem>
                   <SelectItem value="General Medicine">General Medicine</SelectItem>
                   <SelectItem value="Gynecologist">Gynecologist</SelectItem>
