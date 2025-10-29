@@ -123,10 +123,10 @@ const Auth = () => {
           if (role === "doctor") {
             const { error: doctorError } = await supabase.from("doctors").insert({
               user_id: data.user.id,
-              specialization,
-              qualification,
+              specialization: specialization.trim(),
+              qualification: qualification.trim(),
               experience_years: parseInt(experienceYears),
-              location,
+              location: location.trim(),
             });
 
             if (doctorError) throw doctorError;
