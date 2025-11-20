@@ -26,6 +26,7 @@ export type Database = {
           is_self_booking: boolean | null
           notes: string | null
           parent_id: string
+          patient_profile_id: string | null
           status: string
           updated_at: string
         }
@@ -40,6 +41,7 @@ export type Database = {
           is_self_booking?: boolean | null
           notes?: string | null
           parent_id: string
+          patient_profile_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -54,6 +56,7 @@ export type Database = {
           is_self_booking?: boolean | null
           notes?: string | null
           parent_id?: string
+          patient_profile_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -77,6 +80,13 @@ export type Database = {
             columns: ["doctor_id"]
             isOneToOne: false
             referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_patient_profile_id_fkey"
+            columns: ["patient_profile_id"]
+            isOneToOne: false
+            referencedRelation: "patient_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -202,44 +212,187 @@ export type Database = {
           },
         ]
       }
-      doctors: {
+      doctor_profiles_temp: {
         Row: {
-          bio: string | null
-          consultation_fee: number | null
+          age: number
+          consultation_fees: number | null
+          contact_phone: string
           created_at: string
+          documents: Json | null
           experience_years: number
           id: string
-          location: string
+          name: string
           qualification: string
+          rejection_reason: string | null
+          sex: string
           specialization: string
+          status: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          bio?: string | null
-          consultation_fee?: number | null
+          age: number
+          consultation_fees?: number | null
+          contact_phone: string
           created_at?: string
+          documents?: Json | null
           experience_years: number
           id?: string
-          location: string
+          name: string
           qualification: string
+          rejection_reason?: string | null
+          sex: string
           specialization: string
+          status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          bio?: string | null
-          consultation_fee?: number | null
+          age?: number
+          consultation_fees?: number | null
+          contact_phone?: string
           created_at?: string
+          documents?: Json | null
           experience_years?: number
           id?: string
-          location?: string
+          name?: string
           qualification?: string
+          rejection_reason?: string | null
+          sex?: string
           specialization?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      doctors: {
+        Row: {
+          age: number | null
+          bio: string | null
+          consultation_fee: number | null
+          contact_phone: string | null
+          created_at: string
+          doctor_profile_temp_id: string | null
+          documents: Json | null
+          experience_years: number
+          id: string
+          location: string
+          name: string | null
+          qualification: string
+          sex: string | null
+          specialization: string
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          bio?: string | null
+          consultation_fee?: number | null
+          contact_phone?: string | null
+          created_at?: string
+          doctor_profile_temp_id?: string | null
+          documents?: Json | null
+          experience_years: number
+          id?: string
+          location: string
+          name?: string | null
+          qualification: string
+          sex?: string | null
+          specialization: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          bio?: string | null
+          consultation_fee?: number | null
+          contact_phone?: string | null
+          created_at?: string
+          doctor_profile_temp_id?: string | null
+          documents?: Json | null
+          experience_years?: number
+          id?: string
+          location?: string
+          name?: string | null
+          qualification?: string
+          sex?: string | null
+          specialization?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doctors_doctor_profile_temp_id_fkey"
+            columns: ["doctor_profile_temp_id"]
+            isOneToOne: false
+            referencedRelation: "doctor_profiles_temp"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_records: {
+        Row: {
+          attachments: Json | null
+          created_at: string
+          diagnosis: string | null
+          doctor_id: string | null
+          follow_up_date: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          prescriptions: string | null
+          symptoms: string | null
+          updated_at: string
+          visit_date: string
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string
+          diagnosis?: string | null
+          doctor_id?: string | null
+          follow_up_date?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          prescriptions?: string | null
+          symptoms?: string | null
+          updated_at?: string
+          visit_date: string
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string
+          diagnosis?: string | null
+          doctor_id?: string | null
+          follow_up_date?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          prescriptions?: string | null
+          symptoms?: string | null
+          updated_at?: string
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_records_doctor_id_fkey"
+            columns: ["doctor_id"]
+            isOneToOne: false
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "health_records_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patient_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       medications: {
         Row: {
@@ -296,6 +449,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_profiles: {
+        Row: {
+          age: number
+          created_at: string
+          health_issue: string | null
+          id: string
+          location: string
+          name: string
+          sex: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age: number
+          created_at?: string
+          health_issue?: string | null
+          id?: string
+          location: string
+          name: string
+          sex: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number
+          created_at?: string
+          health_issue?: string | null
+          id?: string
+          location?: string
+          name?: string
+          sex?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
