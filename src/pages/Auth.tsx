@@ -17,7 +17,10 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
-  const [role, setRole] = useState<"parent" | "doctor" | "user">("user");
+  const [role, setRole] = useState<"patient" | "doctor" | "admin">("patient");
+  const [age, setAge] = useState("");
+  const [sex, setSex] = useState<"male" | "female" | "other">("male");
+  const [healthIssue, setHealthIssue] = useState("");
   const [specialization, setSpecialization] = useState("");
   const [qualification, setQualification] = useState("");
   const [experienceYears, setExperienceYears] = useState("");
@@ -25,7 +28,6 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in and redirect based on role
     const checkAuthAndRedirect = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -35,8 +37,12 @@ const Auth = () => {
           .eq("user_id", session.user.id)
           .single();
 
-        if (roleData?.role === "doctor") {
+        if (roleData?.role === "admin") {
+          navigate("/admin-dashboard");
+        } else if (roleData?.role === "doctor") {
           navigate("/doctor-dashboard");
+        } else if (roleData?.role === "patient") {
+          navigate("/patient-dashboard");
         } else {
           navigate("/dashboard");
         }
@@ -45,7 +51,6 @@ const Auth = () => {
 
     checkAuthAndRedirect();
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -56,8 +61,12 @@ const Auth = () => {
           .eq("user_id", session.user.id)
           .single();
 
-        if (roleData?.role === "doctor") {
+        if (roleData?.role === "admin") {
+          navigate("/admin-dashboard");
+        } else if (roleData?.role === "doctor") {
           navigate("/doctor-dashboard");
+        } else if (roleData?.role === "patient") {
+          navigate("/patient-dashboard");
         } else {
           navigate("/dashboard");
         }
@@ -66,6 +75,7 @@ const Auth = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,14 +129,33 @@ const Auth = () => {
 
           if (roleError) throw roleError;
 
-          // If doctor, create doctor profile
-          if (role === "doctor") {
-            const { error: doctorError } = await supabase.from("doctors").insert({
+          // If patient, create patient profile
+          if (role === "patient") {
+            const { error: patientError } = await supabase.from("patient_profiles").insert({
               user_id: data.user.id,
+              name: name.trim(),
+              age: parseInt(age),
+              sex: sex,
+              location: location.trim(),
+              health_issue: healthIssue.trim(),
+            });
+
+            if (patientError) throw patientError;
+          }
+
+          // If doctor, create temporary doctor profile (pending approval)
+          if (role === "doctor") {
+            const { error: doctorError } = await supabase.from("doctor_profiles_temp").insert({
+              user_id: data.user.id,
+              name: name.trim(),
+              age: parseInt(age),
+              sex: sex,
               specialization: specialization.trim(),
               qualification: qualification.trim(),
               experience_years: parseInt(experienceYears),
-              location: location.trim(),
+              consultation_fees: 0,
+              contact_phone: phone.trim(),
+              status: 'pending',
             });
 
             if (doctorError) throw doctorError;
@@ -135,10 +164,10 @@ const Auth = () => {
           toast({
             title: "Account created!",
             description: role === "doctor" 
-              ? "Welcome to VacciTrack. Your doctor profile is ready."
-              : role === "parent"
-              ? "Welcome to VacciTrack. Let's add your child's profile."
-              : "Welcome to VacciTrack. Book your first appointment.",
+              ? "Your application has been submitted for admin approval. You'll be notified once approved."
+              : role === "patient"
+              ? "Welcome to VacciTrack! You can now search for doctors and book appointments."
+              : "Welcome to VacciTrack!",
           });
         }
       }
@@ -217,35 +246,20 @@ const Auth = () => {
                 <>
                   <div className="space-y-2">
                     <Label>I am a</Label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <button
                         type="button"
-                        onClick={() => setRole("user")}
+                        onClick={() => setRole("patient")}
                         className={`p-4 border-2 rounded-lg transition-all ${
-                          role === "user"
+                          role === "patient"
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/50"
                         }`}
                       >
                         <div className="text-center">
                           <User className="h-8 w-8 mx-auto mb-2 text-primary" />
-                          <p className="font-semibold text-sm">User</p>
-                          <p className="text-xs text-muted-foreground">General Treatment</p>
-                        </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRole("parent")}
-                        className={`p-4 border-2 rounded-lg transition-all ${
-                          role === "parent"
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <div className="text-center">
-                          <Baby className="h-8 w-8 mx-auto mb-2 text-primary" />
-                          <p className="font-semibold text-sm">Parent</p>
-                          <p className="text-xs text-muted-foreground">Child Healthcare</p>
+                          <p className="font-semibold text-sm">Patient</p>
+                          <p className="text-xs text-muted-foreground">Seeking Healthcare</p>
                         </div>
                       </button>
                       <button
@@ -277,6 +291,49 @@ const Auth = () => {
                       required={!isLogin}
                     />
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="age">Age</Label>
+                      <Input
+                        id="age"
+                        type="number"
+                        placeholder="Age"
+                        value={age}
+                        onChange={(e) => setAge(e.target.value)}
+                        required={!isLogin}
+                        min="1"
+                        max="150"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="sex">Sex</Label>
+                      <Select value={sex} onValueChange={(v: any) => setSex(v)} required>
+                        <SelectTrigger id="sex">
+                          <SelectValue placeholder="Select sex" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {role === "patient" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="healthIssue">Health Issue / Concern</Label>
+                      <Input
+                        id="healthIssue"
+                        type="text"
+                        placeholder="Describe your health concern"
+                        value={healthIssue}
+                        onChange={(e) => setHealthIssue(e.target.value)}
+                        required={!isLogin}
+                      />
+                    </div>
+                  )}
 
                   {role === "doctor" && (
                     <>
@@ -329,6 +386,7 @@ const Auth = () => {
                       placeholder="Enter your phone number"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
+                      required={!isLogin}
                     />
                   </div>
                   <div className="space-y-2">
